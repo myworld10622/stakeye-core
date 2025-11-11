@@ -1,0 +1,373 @@
+@extends($activeTemplate . 'layouts.master')
+@section('content')
+    <section class="pt-100 pb-100">
+        <div class="container ">
+            <div class="row justify-content-center">
+                <div class="col-lg-9">
+                    <div class="account-wrapper">
+                        <div class="card-body">
+                            <form action="{{ route('user.deposit.insert') }}" method="post" class="deposit-form">
+                                @csrf
+                                <input type="hidden" name="currency">
+                                <div class="gateway-card">
+                                    <div class="row justify-content-center gy-sm-4 gy-3">
+                                        <div class="col-12">
+                                            <h5 class="payment-card-title">@lang('Deposit')</h5>
+                                        </div>
+                                        <div class="col-12">
+                                            <p class="text">@lang('Available Bonus.')</p>
+                                          
+
+                                        </div>
+
+
+
+                                        <div class="col-lg-6">
+                                            <div class="payment-system-list is-scrollable gateway-option-list">
+                                                @foreach ($gatewayCurrency as $data)
+                                                    <label for="{{ titleToKey($data->name) }}"
+                                                           class="payment-item @if ($loop->index > 4) d-none @endif gateway-option">
+                                                        <div class="payment-item__info">
+                                                            <span class="payment-item__check"></span>
+                                                            <span
+                                                                class="payment-item__name">{{ __($data->name) }}</span>
+                                                        </div>
+                                                        <div class="payment-item__thumb">
+                                                            <img class="payment-item__thumb-img"
+                                                                 src="{{ getImage(getFilePath('gateway') . '/' . $data->method->image) }}"
+                                                                 alt="@lang('payment-thumb')">
+                                                        </div>
+                                                        <input class="payment-item__radio gateway-input"
+                                                               id="{{ titleToKey($data->name) }}" hidden
+                                                               data-gateway='@json($data)' type="radio" name="gateway"
+                                                               value="{{ $data->method_code }}"
+                                                               @if (old('gateway'))
+                                                                   @checked(old('gateway') == $data->method_code)
+                                                               @else
+                                                                   @checked($loop->first)
+                                                               @endif
+                                                               data-min-amount="{{ showAmount($data->min_amount) }}"
+                                                               data-max-amount="{{ showAmount($data->max_amount) }}">
+                                                    </label>
+                                                @endforeach
+                                                @if ($gatewayCurrency->count() > 4)
+                                                    <button type="button" class="payment-item__btn more-gateway-option">
+                                                        <p class="payment-item__btn-text">@lang('Show All Payment Options')</p>
+                                                        <span class="payment-item__btn__icon"><i
+                                                                class="fas fa-chevron-down"></i></i></span>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="payment-system-list p-3">
+
+                                               
+
+                                                 <div class="deposit-info gateway_amount_div">
+                                                    <div class="deposit-info__title">
+                                                        <p class="text mb-0">            @lang('In') <span class="gateway-currency"></span></p>
+                                                    </div>
+                                                    <div class="deposit-info__input">
+                                                        <div class="deposit-info__input-group input-group"> 
+                                                            <input type="text" class="form-control form--control gateway_amount"
+                                                                   name="gateway_amount"
+                                                                   placeholder="@lang('00.00')"
+                                                                   value="{{ old('gateway_amount') }}" autocomplete="off">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+
+
+                                                
+                                                <div class="deposit-info">
+                                                    <div class="deposit-info__title">
+                                                        <p class="text mb-0">@lang('Amount')</p>
+                                                    </div>
+                                                    <div class="deposit-info__input">
+                                                        <div class="deposit-info__input-group input-group">
+                                                            <span
+                                                                class="deposit-info__input-group-text">{{ gs('cur_sym') }}</span>
+                                                            <input type="text" class="form-control form--control amount"
+                                                                   name="amount"
+                                                                   placeholder="@lang('00.00')"
+                                                                   value="{{ old('amount') }}" autocomplete="off">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                         
+                                                
+                                                <div class="deposit-info">
+                                                    <div class="deposit-info__title">
+                                                        <p class="text has-icon"> @lang('Limit')
+                                                            <span></span>
+                                                        </p>
+                                                    </div>
+                                                    <div class="deposit-info__input">
+                                                        <p class="text"><span class="gateway-limit">@lang('0.00')</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="deposit-info">
+                                                    <div class="deposit-info__title">
+                                                        <p class="text has-icon">@lang('Processing Charge')
+                                                            <span data-bs-toggle="tooltip"
+                                                                  title="@lang('Processing charge for payment gateways')"
+                                                                  class="proccessing-fee-info"><i
+                                                                    class="las la-info-circle"></i> </span>
+                                                        </p>
+                                                    </div>
+                                                    <div class="deposit-info__input">
+                                                        <p class="text"><span
+                                                                class="processing-fee">@lang('0.00')</span>
+                                                            {{ __(gs('cur_text')) }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="deposit-info total-amount pt-3">
+                                                    <div class="deposit-info__title">
+                                                        <p class="text">@lang('Total')</p>
+                                                    </div>
+                                                    <div class="deposit-info__input">
+                                                        <p class="text"><span class="final-amount">@lang('0.00')</span>
+                                                            {{ __(gs('cur_text')) }}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="deposit-info gateway-conversion d-none total-amount pt-2">
+                                                    <div class="deposit-info__title">
+                                                        <p class="text">@lang('Conversion')
+                                                        </p>
+                                                    </div>
+                                                    <div class="deposit-info__input">
+                                                        <p class="text"></p>
+                                                    </div>
+                                                </div>
+                                               
+                                                <div class="d-none crypto-message mb-3">
+                                                    @lang('Conversion with') <span
+                                                        class="gateway-currency"></span> @lang('and final value will Show on next step')
+                                                </div>
+                                                <br/>
+                                            <h3>You can select available depost bonuses as well.</h3>
+
+                                            @php
+                                            $alreadyDeposits = \App\Models\Deposit::where('user_id', auth()->id())->where("status",1)->first();
+                                                $rewards = \App\Models\RewardModel::where("reward_type", "deposit")->where("status","active")->where("for_first_deposit",0)->get();
+                                                $firstDepositReward = \App\Models\RewardModel::where("reward_type", "deposit")->where("for_first_deposit",1)->where("status","active")->first();
+                                            @endphp
+
+                                            <div class="mb-3">
+                                           
+                                                <div class="custom-select-wrapper">
+                                                    <select class="form-select custom-select" id="rewardSelect" name="reward_id">
+                                                        <option value="" class="fw-bold text-muted">@lang('No Bonus')</option>
+                                                        @if(!$alreadyDeposits && $firstDepositReward)
+
+                                                            <option value="{{ $firstDepositReward->id }}">
+                                                                {{ $firstDepositReward->name }} 
+                                                                &mdash; 
+                                                                
+                                                                @if($firstDepositReward->type == 'percentage')
+                                                                  <span class="text-primary">{{ $firstDepositReward->amount }}%</span>
+                                                                @else
+                                                                  <span class="text-primary">{{ showAmount($firstDepositReward->amount) }}</span>
+                                                                @endif
+                                                                Bonus on deposit of: 
+                                                                 <span class="text-success">{{ showAmount($firstDepositReward->min_deposit_amount) }}</span> 
+                                                                to <span class="text-danger">{{ showAmount($firstDepositReward->max_deposit_amount) }}</span> 
+                                                                
+                                                            </option>
+                                                        @endif
+                                                        @foreach($rewards as $reward)
+                                                    
+                                                            <option value="{{ $reward->id }}">
+                                                                {{ $reward->name }} 
+                                                                &mdash; 
+                                                                
+                                                                @if($reward->type == 'percentage')
+                                                                  <span class="text-primary">{{ $reward->amount }}%</span>
+                                                                @else
+                                                                  <span class="text-primary">{{ showAmount($reward->amount) }}</span>
+                                                                @endif
+                                                                Bonus on deposit of: 
+                                                                 <span class="text-success">{{ showAmount($reward->min_deposit_amount) }}</span> 
+                                                                to <span class="text-danger">{{ showAmount($reward->max_deposit_amount) }}</span> 
+                                                                
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <style>
+                                                    .custom-select-wrapper select.custom-select {
+                                                        font-size: 1rem;
+                                                        padding: 0.75rem 1rem;
+                                                        border-radius: 0.5rem;
+                                                        border: 1px solid #e5e5e5;
+                                                        background: #f8f9fa;
+                                                        font-weight: 500;
+                                                    }
+                                                    .custom-select-wrapper option {
+                                                        padding: 0.5rem 1rem;
+                                                        font-size: 1rem;
+                                                    }
+                                                </style>
+                                            </div>
+ 
+
+
+                                                <button type="submit" class="btn btn--base w-100" disabled>
+                                                    @lang('Confirm Deposit')
+                                                </button>
+                                                <div class="info-text pt-3">
+                                                    <p class="text">@lang('Ensuring your funds grow safely through our secure deposit process with world-class payment options.')</p>
+                                                    <p class="usdt-note d-none  "style="color:#fc6404;font-size18px;" >Note: In case of USDT deposit, withdrawal will be processed in USDT.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+@endsection
+
+@push('script')
+    <script>
+        "use strict";
+        (function ($) {
+
+            var amount = parseFloat($('.amount').val() || 0);
+            var gateway, minAmount, maxAmount;
+
+            $(".gateway_amount").on('input', function (e) {
+                let gatewayAmount = parseFloat($(this).val());
+                if (!gatewayAmount) {
+                    gatewayAmount = 0;
+                }
+                 gatewayAmount = parseFloat(gatewayAmount / gateway.rate).toFixed(gateway.method.crypto == 1 ? 8 : 2);
+
+                 
+                //trigger event
+                  if (gatewayAmount < Number(gateway.min_amount) || gatewayAmount > Number(gateway.max_amount)) {
+                    $(".deposit-form button[type=submit]").attr('disabled', true);
+                } else {
+                    $(".deposit-form button[type=submit]").removeAttr('disabled');
+                }
+                  $('.amount').val(gatewayAmount);  
+                  amount = parseFloat(gatewayAmount) ;
+                   
+                 
+            });
+ $(".gateway_amount").on('focusout', function (e) {
+            calculation();
+ });
+            $('.amount').on('input', function (e) {
+                amount = parseFloat($(this).val());
+                if (!amount) {
+                    amount = 0;
+                }
+                calculation();
+            });
+
+            $('.gateway-input').on('change', function (e) {
+                gatewayChange();
+            });
+
+            function gatewayChange() {
+                let gatewayElement = $('.gateway-input:checked');
+                let methodCode = gatewayElement.val();
+
+                gateway = gatewayElement.data('gateway');
+                minAmount = gatewayElement.data('min-amount');
+                maxAmount = gatewayElement.data('max-amount');
+
+                let processingFeeInfo =
+                    `${parseFloat(gateway.percent_charge).toFixed(2)}% with ${parseFloat(gateway.fixed_charge).toFixed(2)} {{ __(gs('cur_text')) }} charge for payment gateway processing fees`
+                $(".proccessing-fee-info").attr("data-bs-original-title", processingFeeInfo);
+                calculation();
+            }
+
+            gatewayChange();
+
+            $(".more-gateway-option").on("click", function (e) {
+                let paymentList = $(".gateway-option-list");
+                paymentList.find(".gateway-option").removeClass("d-none");
+                $(this).addClass('d-none');
+                paymentList.animate({
+                    scrollTop: (paymentList.height() - 60)
+                }, 'slow');
+            });
+
+            function calculation() { 
+                if (!gateway) return;
+                $(".gateway-limit").text(minAmount + " - " + maxAmount);
+
+                let percentCharge = 0;
+                let fixedCharge = 0;
+                let totalPercentCharge = 0;
+
+                if (amount) {
+                    percentCharge = parseFloat(gateway.percent_charge);
+                    fixedCharge = parseFloat(gateway.fixed_charge);
+                    totalPercentCharge = parseFloat(amount / 100 * percentCharge);
+                }
+
+                let totalCharge = parseFloat(totalPercentCharge + fixedCharge);
+                let totalAmount = parseFloat((amount || 0) + totalPercentCharge + fixedCharge);
+
+                $(".final-amount").text(totalAmount.toFixed(2));
+                $(".processing-fee").text(totalCharge.toFixed(2));
+                $("input[name=currency]").val(gateway.currency);
+                $(".gateway-currency").text(gateway.currency);
+
+                if (amount < Number(gateway.min_amount) || amount > Number(gateway.max_amount)) {
+                    $(".deposit-form button[type=submit]").attr('disabled', true);
+                } else {
+                    $(".deposit-form button[type=submit]").removeAttr('disabled');
+                }
+
+                if (gateway.currency != "{{ gs('cur_text') }}" && gateway.method.crypto != 1) {
+                    $('.deposit-form').addClass('adjust-height')
+
+                    $(".gateway-conversion, .conversion-currency").removeClass('d-none');
+                    $(".gateway-conversion").find('.deposit-info__input .text').html(
+                        `1 {{ __(gs('cur_text')) }} = <span class="rate">${parseFloat(gateway.rate).toFixed(5)}</span>  <span class="method_currency">${gateway.currency}</span>`
+                    );
+                 //   $('.in-currency').text(parseFloat(totalAmount * gateway.rate).toFixed(gateway.method.crypto == 1 ? 8 : 2))
+                 if(parseFloat(totalAmount * gateway.rate)>0){
+                      $(".gateway_amount").val(parseFloat(totalAmount * gateway.rate).toFixed(gateway.method.crypto == 1 ? 8 : 2));
+                 } 
+                } else {
+                    $(".gateway-conversion, .conversion-currency").addClass('d-none');
+                    $('.deposit-form').removeClass('adjust-height')
+                }
+                if(gateway.rate != 1 ){
+                    $(".usdt-note").removeClass('d-none');
+                    $(".gateway_amount_div").removeClass('d-none');
+                }else{
+                     $(".usdt-note").addClass('d-none');
+                     $('.gateway_amount_div').addClass('d-none');
+                }
+                if (gateway.method.crypto == 1) {
+                    $('.crypto-message').removeClass('d-none');
+                } else {
+                    $('.crypto-message').addClass('d-none');
+                   
+                }
+            }
+
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+            $('.gateway-input').change();
+        })(jQuery);
+    </script>
+@endpush
